@@ -26,18 +26,6 @@ export interface YOLOMetadata {
 }
 
 
-
-/**
- * Bounding Boxのデータ型
- */
-export interface BaseBbox {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    label: number;
-    score: number;
-}
 /**
  * 物体検出のバウンディングボックス
  */

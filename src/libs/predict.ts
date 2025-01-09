@@ -29,36 +29,18 @@ export const predict = (
   const iouThreshold = 0.5;
   const bbox: DetectBbox[] | SegBbox[] | OrientedBbox[] = tf.tidy(() => {
     switch (taskType) {
-      case ModelTaskType.DETECT:
-        { const result = model!.predict(imageTensor) as tf.Tensor<tf.Rank>;
-        return resultToDetectBbox(
-          result,
-          labelCount,
-          maxOutputSize,
-          iouThreshold,
-          minScore,
-          targetId
-        ) as []; }
-      case ModelTaskType.ORIENTED:
-        { const result = model!.predict(imageTensor) as tf.Tensor<tf.Rank>;
-        return resultToOrientedBbox(
-          result,
-          labelCount,
-          maxOutputSize,
-          iouThreshold,
-          minScore,
-          targetId
-        ) as []; }
-      case ModelTaskType.SEGMENT:
-        { const result = model!.predict(imageTensor) as tf.Tensor<tf.Rank>[];
-        return resultToSegBbox(
-          result,
-          labelCount,
-          maxOutputSize,
-          iouThreshold,
-          minScore,
-          targetId
-        ) as []; }
+      case ModelTaskType.DETECT: {
+        const result = model!.predict(imageTensor) as tf.Tensor<tf.Rank>;
+        return resultToDetectBbox(result, labelCount, maxOutputSize, iouThreshold, minScore, targetId) as [];
+      }
+      case ModelTaskType.ORIENTED: {
+        const result = model!.predict(imageTensor) as tf.Tensor<tf.Rank>;
+        return resultToOrientedBbox(result, labelCount, maxOutputSize, iouThreshold, minScore, targetId) as [];
+      }
+      case ModelTaskType.SEGMENT: {
+        const result = model!.predict(imageTensor) as tf.Tensor<tf.Rank>[];
+        return resultToSegBbox(result, labelCount, maxOutputSize, iouThreshold, minScore, targetId) as [];
+      }
     }
   });
   return bbox;

@@ -57,8 +57,8 @@ export const resultToSegBbox = (
       const dotProduct = tf.matMul(maskWeight, transponsedVectors);
       // シグモイド関数で0から1の範囲に変換
       const probabiltyMap = dotProduct.sigmoid();
-      // 0.7以上の確率を持つピクセルを取り出す
-      const binaryMask = probabiltyMap.greater(0.8);
+      // minScore以上の確率を持つピクセルを取り出す
+      const binaryMask = probabiltyMap.greater(minScore);
       const masks = binaryMask
         .transpose([1, 0])
         .reshape([resultBboxes.length, 160, 160])
