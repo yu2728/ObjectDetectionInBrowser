@@ -37,5 +37,5 @@ export const obb = async (
       filteredBbox.dispose();
       result.forEach(e => e.dispose());
 
-    return bboxes.filter(e => e.label === 1);
+    return bboxes;
   };
