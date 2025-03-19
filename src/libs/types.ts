@@ -1,11 +1,11 @@
-
 /**
  * モデルの種類
  */
 export enum ModelTaskType {
-    DETECT = 'detect',
-    SEGMENT = 'segment',
-    ORIENTED = 'oriented'
+  DETECT = "detect",
+  SEGMENT = "segment",
+  ORIENTED = "oriented",
+  V12_DETECT = "v12_detect",
 }
 
 /**
@@ -23,8 +23,15 @@ export interface YOLOMetadata {
   batch: number;
   imgsz: [number, number];
   names: { [key: number]: string };
+  args: Args;
 }
 
+interface Args {
+  batch: number;
+  half: boolean;
+  int8: boolean;
+  nms: boolean;
+}
 
 /**
  * 物体検出のバウンディングボックス

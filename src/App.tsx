@@ -5,11 +5,13 @@ import * as tf from "@tensorflow/tfjs";
 
 import { LoaderCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { convertImageElement, tensorFromPixel } from "./libs/conver_image_element";
+import { detect } from "./libs/detect";
+import { detectV12 } from "./libs/detect_v12";
 import { loadMetadata } from "./libs/load_metadata";
 import { loadYOLOModel } from "./libs/load_model";
 import { getImagePath, getModelPath } from "./libs/model_path";
-import { predict } from "./libs/predict";
+import { obb } from "./libs/obb";
+import { seg } from "./libs/seg";
 import { DetectBbox, ModelTaskType, OrientedBbox, SegBbox, YOLOMetadata } from "./libs/types";
 import { detectView } from "./libs/view/detect";
 import { orientedView } from "./libs/view/oriented";
@@ -33,31 +35,35 @@ function App() {
     imageRef.current!.src = getImagePath(taskType);
   }
 
-  async function detect() {
+  async function predict() {
     setState([true, "推論を実行しています"]);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    await new Promise((resolve) => {
-      // 画像のTensorを取得
-      const convertedCanvas = convertImageElement(imageRef.current!, metadata!.imgsz);
-      const imageTensor = tensorFromPixel(convertedCanvas, metadata!.imgsz);
-      const bboxes = predict(selectedModelType, model!, imageTensor, Object.entries(metadata!.names).length, 0.4, undefined);
-      const restoreScale = Math.max(imageRef.current!.width / metadata!.imgsz[0], imageRef.current!.height / metadata!.imgsz[1]);
-      switch (selectedModelType) {
-        case ModelTaskType.DETECT:
-          detectView(canvasRef.current!, imageRef.current!, restoreScale, bboxes as DetectBbox[]);
-          break;
-        case ModelTaskType.ORIENTED:
-          orientedView(canvasRef.current!, imageRef.current!, restoreScale, bboxes as OrientedBbox[]);
-          break;
-        case ModelTaskType.SEGMENT:
-          segmentView(canvasRef.current!, maskCanvasRef.current!, imageRef.current!, metadata!.imgsz, bboxes as SegBbox[]);
-          break;
+    if (!imageRef.current || !metadata || !model) {
+      return;
+    }
+    const restoreScale = Math.max(imageRef.current!.width / metadata!.imgsz[0], imageRef.current!.height / metadata!.imgsz[1]);
+    switch (selectedModelType) {
+      case ModelTaskType.DETECT: {
+        const bboxes = await detect(model, imageRef.current, metadata.imgsz, 0.4);
+        detectView(canvasRef.current!, imageRef.current!, restoreScale, bboxes as DetectBbox[]);
+        break;
       }
-      resolve(true);
-    });
-
-    setState([false, "完了"]);
+      case ModelTaskType.ORIENTED: {
+        const bboxes = await obb(model, imageRef.current, metadata.imgsz, 0.4);
+        orientedView(canvasRef.current!, imageRef.current!, restoreScale, bboxes as OrientedBbox[]);
+        break;
+      }
+      case ModelTaskType.SEGMENT: {
+        const bboxes = await seg(model, imageRef.current, metadata.imgsz, 0.4);
+        segmentView(canvasRef.current!, maskCanvasRef.current!, imageRef.current!, metadata!.imgsz, bboxes as SegBbox[]);
+        break;
+      }
+      case ModelTaskType.V12_DETECT: {
+        const bboxes = await detectV12(model, imageRef.current, metadata.imgsz, 0.4);
+        detectView(canvasRef.current!, imageRef.current!, restoreScale, bboxes);
+        break;
+      }
+    }
+    setState([false, `完了`]);
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +121,7 @@ function App() {
           <option value={ModelTaskType.DETECT}>Detection</option>
           <option value={ModelTaskType.ORIENTED}>Oriented Bounding Box</option>
           <option value={ModelTaskType.SEGMENT}>Segmentation</option>
+          <option value={ModelTaskType.V12_DETECT}>Detection v12</option>
         </select>
       </div>
       <label htmlFor="input_file" className="block mb-2 text-sm font-medium text-center">
@@ -128,24 +135,24 @@ function App() {
         <p className=" text-sm opacity-80">{state[1]}</p>
       </div>
       <button
-        onClick={() => detect()}
+        onClick={() => predict()}
         disabled={state[0]}
         className={` inline-flex justify-center items-center px-8 py-2 rounded-lg h-12 w-32 text-center text-white text-xl ${state[0] ? "bg-cyan-500 opacity-50 " : "bg-cyan-500"}`}
       >
         {state[0] ? <LoaderCircle className="  h-6 w-6 animate-spin" /> : "検出"}
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
         <div>
           <h2 className="text-lg font-semibold mb-2 text-center">Input Image</h2>
-          <img ref={imageRef} src={imageSrc} alt="Sample for object detection" className="w-full max-w-[400px] h-auto rounded-lg shadow-md" />
+          <img ref={imageRef} src={imageSrc} alt="Sample for object detection" className="w-full max-w-[800px] h-auto rounded-lg shadow-md" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold mb-2 text-center ">Detection Result</h2>
-          <canvas ref={canvasRef} className="w-full max-w-[400px] h-auto rounded-lg shadow-md"></canvas>
+          <h2 className="text-lg font-semibold mb-2 text-center ">Result</h2>
+          <canvas ref={canvasRef} className="w-full max-w-[800px] h-auto rounded-lg shadow-md"></canvas>
         </div>
       </div>
-      <canvas ref={maskCanvasRef} className="w-full max-w-[400px] h-auto rounded-lg shadow-md hidden"></canvas>
+      <canvas ref={maskCanvasRef} className="w-full max-w-[800px] h-auto rounded-lg shadow-md hidden"></canvas>
     </div>
   );
 }
