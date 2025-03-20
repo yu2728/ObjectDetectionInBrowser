@@ -3,17 +3,17 @@ import "@tensorflow/tfjs-backend-webgl";
 
 import * as tf from "@tensorflow/tfjs";
 import { convertImageElement, tensorFromPixel } from "./conver_image_element";
-import { DetectBbox, PoseBbox, PoseKeypoint } from "./types";
+import { PoseBbox, PoseKeypoint } from "./types";
 
 /**
- * 物体検出のBBOXに変換する(YOLO v12)
+ * POSEのBBOXに変換する(YOLO v12)
  * @param model
  * @param image
  * @param imgsz
  * @param minScore
  * @returns
  */
-export const pose = async (model: tf.GraphModel<string | tf.io.IOHandler>, image: HTMLImageElement, imgsz: [number, number], minScore: number): Promise<DetectBbox[]> => {
+export const pose = async (model: tf.GraphModel<string | tf.io.IOHandler>, image: HTMLImageElement, imgsz: [number, number], minScore: number): Promise<PoseBbox[]> => {
   const convertedCanvas = convertImageElement(image, imgsz);
   const imageTensor = tensorFromPixel(convertedCanvas, imgsz);
   const result = (await model.predictAsync(imageTensor)) as tf.Tensor2D[];
@@ -36,7 +36,7 @@ export const pose = async (model: tf.GraphModel<string | tf.io.IOHandler>, image
     }
     return { x: x1, y: y1, w: x2 - x1, h: y2 - y1, score: e[1][4], label: e[1][5], keypoints: keypoints } as PoseBbox;
   });
-  
+
   imageTensor.dispose();
   mask.dispose();
   filteredBbox.dispose();
