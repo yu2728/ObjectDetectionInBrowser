@@ -8,6 +8,8 @@ export function getModelPath(taskType: ModelTaskType) {
       return `./models/obb`;
     case ModelTaskType.SEGMENT:
       return `./models/seg`;
+    case ModelTaskType.POSE:
+      return `./models/pose`;
     case ModelTaskType.V12_DETECT:
       return `./models/v12_detect`;
   }
@@ -21,6 +23,8 @@ export function getImagePath(taskType: ModelTaskType) {
       return "./images/obb.jpg";
     case ModelTaskType.SEGMENT:
       return "./images/seg.jpg";
+    case ModelTaskType.POSE:
+      return "./images/pose.jpg";
     case ModelTaskType.V12_DETECT:
       return "./images/detect.jpg";
   }

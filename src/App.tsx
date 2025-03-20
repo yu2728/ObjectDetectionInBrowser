@@ -11,10 +11,12 @@ import { loadMetadata } from "./libs/load_metadata";
 import { loadYOLOModel } from "./libs/load_model";
 import { getImagePath, getModelPath } from "./libs/model_path";
 import { obb } from "./libs/obb";
+import { pose } from "./libs/pose";
 import { seg } from "./libs/seg";
-import { DetectBbox, ModelTaskType, OrientedBbox, SegBbox, YOLOMetadata } from "./libs/types";
+import { DetectBbox, ModelTaskType, OrientedBbox, PoseBbox, SegBbox, YOLOMetadata } from "./libs/types";
 import { detectView } from "./libs/view/detect";
 import { orientedView } from "./libs/view/oriented";
+import { poseView } from "./libs/view/pose";
 import { segmentView } from "./libs/view/seg";
 
 function App() {
@@ -55,6 +57,11 @@ function App() {
       case ModelTaskType.SEGMENT: {
         const bboxes = await seg(model, imageRef.current, metadata.imgsz, 0.4);
         segmentView(canvasRef.current!, maskCanvasRef.current!, imageRef.current!, metadata!.imgsz, bboxes as SegBbox[]);
+        break;
+      }
+      case ModelTaskType.POSE: {
+        const bboxes = await pose(model, imageRef.current, metadata.imgsz, 0.4);
+        poseView(canvasRef.current!, imageRef.current!, restoreScale, bboxes as PoseBbox[]);
         break;
       }
       case ModelTaskType.V12_DETECT: {
@@ -121,6 +128,7 @@ function App() {
           <option value={ModelTaskType.DETECT}>Detection</option>
           <option value={ModelTaskType.ORIENTED}>Oriented Bounding Box</option>
           <option value={ModelTaskType.SEGMENT}>Segmentation</option>
+          <option value={ModelTaskType.POSE}>POSE</option>
           <option value={ModelTaskType.V12_DETECT}>Detection v12</option>
         </select>
       </div>
